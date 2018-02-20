@@ -1,19 +1,19 @@
 import hyped.interpreter as itp
 from heapq import heappop, heappush
 
-def addAdj(space, x, y, width, height, world, link_collider, real_space, door_status):
+def addAdj(x, y, door_status):
 	adj_list = []
-	if x - 1 >= 0 and positionIsPassable(world, link_collider, (x - 1, y), real_space, space, height, door_status):
+	if x - 1 >= 0 and positionIsPassable((x - 1, y), door_status):
 		adj_list.append((x - 1, y))
-	if y - 1 >= 0 and positionIsPassable(world, link_collider, (x, y - 1), real_space, space, height, door_status):
+	if y - 1 >= 0 and positionIsPassable((x, y - 1), door_status):
 		adj_list.append((x, y - 1))
-	if x + 1 < width and positionIsPassable(world, link_collider, (x + 1, y), real_space, space, height, door_status):
+	if x + 1 < width and positionIsPassable((x + 1, y), door_status):
 		adj_list.append((x + 1, y))
-	if y + 1 < height and positionIsPassable(world, link_collider, (x, y + 1), real_space, space, height, door_status):
+	if y + 1 < height and positionIsPassable((x, y + 1), door_status):
 		adj_list.append((x, y + 1))
 	return adj_list
 
-def findExitPath(initial_position, destination, door_status, width, height, world, link_collider, real_space, space):
+def findExitPath(initial_position, destination, door_status):
 	q = []
 	heappush(q, (0, initial_position))
 	parent = {}
@@ -26,7 +26,7 @@ def findExitPath(initial_position, destination, door_status, width, height, worl
 	    if current == destination:
 	        break
 
-	    for next in addAdj(space, current[1][0], current[1][1], width, height, world, link_collider, real_space, door_status):
+	    for next in addAdj(current[1][0], current[1][1], door_status):
 	        new_cost = cost[current[1]] + 1
 	        if next not in cost or new_cost < cost[next]:
 	            cost[next] = new_cost
@@ -46,9 +46,9 @@ def findExitPath(initial_position, destination, door_status, width, height, worl
 
 	return path
 
-def findAllExit(initial_position, exit, door_status, width, height, world, link_collider, real_space, space):
+def findAllExit(initial_position, exit, door_status):
 	for goal in exit:
-		path = findExitPath(initial_position, goal, door_status, width, height, world, link_collider, real_space, space)
+		path = findExitPath(initial_position, goal, door_status)
 		print "initial_position: (" + str(initial_position[0]) + ",", str(height - initial_position[1] - 1) + ")"
 		print "goal: (" + str(goal[0]) + ",", str(height - goal[1] - 1) + ")"
 		print ""
@@ -56,7 +56,7 @@ def findAllExit(initial_position, exit, door_status, width, height, world, link_
 			print "(" + str(step[0]) + ",", str(height - step[1] - 1) + ")"
 		print ""
 
-def printInitialState(world, automata_name):
+def getPossibleStates(automata_name):
 	all_states = []
 	for entry in world.automata:
 		if entry.name == automata_name:
@@ -81,12 +81,12 @@ def automataAtPosition(position, dungeon_automata):
 				return automata[0]
 	return None
 
-def positionIsPassable(world, link_collider, position, real_space, space, height, door_status):
+def positionIsPassable(position, door_status):
 	real_position = (position[0], height - position[1] - 1)
-	automata = automataAtPosition(real_position, real_space.initial_automata)
+	automata = automataAtPosition(real_position, space.initial_automata)
 	if automata == "door" and door_status == "open":
 		return True
-	if (automata == None or isPassable(world, link_collider, automata)) and space[position[1]][position[0]] != 1:
+	if (automata == None or isPassable(world, link_collider, automata)) and world_map[position[1]][position[0]] != 1:
 		return True
 	else:
 		return False
@@ -99,31 +99,34 @@ def isPassable(world, link_collider, automata_name):
 					return False
 			return True
 
-def showPaths(status, exit, width, height, world, link_collider, real_space, space):
+def showPaths(status):
 	print status
 	if len(exit) == 1:
 		print "*************************"
-		findAllExit(exit[0], exit, status, width, height, world, link_collider, real_space, space)
+		findAllExit(exit[0], exit, status)
 		print "*************************"
 	else:
 		for portal in exit:
 			print "*************************"
 			temp_copy = list(exit)
 			temp_copy.remove(portal)
-			findAllExit(portal, temp_copy, status, width, height, world, link_collider, real_space, space)
+			findAllExit(portal, temp_copy, status)
 			print "*************************"
 
 # map_index = 2
 
-# initialize data
+# initialize global data
 
 # for each grid
 # initialize grid data
-# print grid layout and determine exits
-# print all automata
+# print grid layout and determines exits
+# store all automata states
 # if a door exists, print a path with the door open and closed
 
-
+# initialize global data:
+# world
+# link_collider
+# link
 world = itp.load_zelda()
 
 for item in world.automata:
@@ -132,8 +135,18 @@ for item in world.automata:
 		link_collider = link.colliders[0].types
 		break
 
-# iterates through every dungeon in the world
+# for each grid
 for grid in world._spaces:
+	# initialize grid data:
+	# space
+	# world_map
+	# height
+	# width
+	# tile_height
+	# tile_width
+	# adj
+	# exit
+	# automata_states
 	print "/////////////////////////"
 	print "/////////////////////////"
 	space = grid[1]
@@ -148,7 +161,7 @@ for grid in world._spaces:
 	adj = {}
 	exit = []
 
-	# creates adjaceny list and prints out the dungeon layout
+	# prints grid layout and determines exits
 	for y in range(0, height):
 		wall = ""
 		for x in range(0, width):
@@ -163,13 +176,13 @@ for grid in world._spaces:
 
 	automata_states = {}
 
-	# displays all initial automata within a dungeon
+	# store all automata states
 	if space.initial_automata:
 		for automata in space.initial_automata:
 			if automata[0] != "link":
 				automata_x = automata[2]["x"] / tile_width
 				automata_y = automata[2]["y"] / tile_height - 1
-				automata_states[automata[0]] = printInitialState(world, automata[0])
+				automata_states[automata[0]] = getPossibleStates(automata[0])
 			elif automata[0] == "link":
 				automata_x = automata[2]["x"] / tile_width
 				automata_y = automata[2]["y"] / tile_height
@@ -178,16 +191,17 @@ for grid in world._spaces:
 		print "initital state: n/a"
 		print
 
+	# if a door exists, print a path with the door open and closed
 	if "door" in automata_states:
 		for init_state in automata_states["door"]:
 			for final_state in automata_states["door"]:
 				if final_state == "open":
 					print "open door:", init_state + "-" + final_state
-					showPaths("open", exit, width, height, world, link_collider, space, world_map)
+					showPaths("open")
 					print
 				elif init_state == "closed":
 					print "closed door:", init_state + "-" + final_state
-					showPaths("closed", exit, width, height, world, link_collider, space, world_map)
+					showPaths("closed")
 					print
 	else:
 		print "I don't exist"
