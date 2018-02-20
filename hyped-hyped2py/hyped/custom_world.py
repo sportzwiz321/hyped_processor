@@ -132,7 +132,16 @@ def showPaths(status, exit, width, height, world, link_collider, real_space, spa
 			findAllExit(portal, temp_copy, status, width, height, world, link_collider, real_space, space)
 			print "*************************"
 
-map_index = 2
+# map_index = 2
+
+# initialize data
+
+# for each grid
+# initialize grid data
+# print grid layout and determine exits
+# print all automata
+# if a door exists, print a path with the door open and closed
+
 
 world = itp.load_zelda()
 
