@@ -12,7 +12,7 @@ def stateCombinations(dungeon_automata):
 		keys = dungeon_automata.keys()
 		count = 0
 		rem_list = []
-		while count < len(keys) and dungeon_automata[keys[count]]["type"] != "door":
+		while count < len(keys) and dungeon_automata[keys[count]]["type"] != "door" and dungeon_automata[keys[count]]["type"] != "enemy_tracker":
 			rem_list.append(keys[count])
 			count += 1
 
@@ -87,14 +87,24 @@ def findExitPath(initial_position, destination):
 
 def findAllExit(initial_position, exit):
 	for goal in exit:
-		path = findExitPath(initial_position, goal)
+		global modified_key
+		modified_key = inventory
 		print "initial_position: (" + str(initial_position[0]) + ",", str(height - initial_position[1] - 1) + ")"
+		print "initial key possession:", modified_key
+		path = findExitPath(initial_position, goal)
+		print "final key possession:", modified_key
 		print "goal: (" + str(goal[0]) + ",", str(height - goal[1] - 1) + ")"
-		print ""
-		for step in path:
-			print "(" + str(step[0]) + ",", str(height - step[1] - 1) + ")"
-		print ""
+		print
+		if path:
+			for step in path:
+				print "(" + str(step[0]) + ",", str(height - step[1] - 1) + ")"
+		else:
+			print "N/A"
+		print
 
+# to grab the x and y offset of the enemy tracker
+# for automata.name == enemy_tracker and automata.collider.is_static == true
+# automata.collider.shape.x.value
 def getPossibleStates(automata_name):
 	all_states = []
 	for entry in world.automata:
@@ -121,16 +131,31 @@ def automataAtPosition(position, dungeon_automata):
 	return None
 
 def positionIsPassable(position):
+
+	# print modified_key
+
 	real_position = (position[0], height - position[1] - 1)
 	automata = automataAtPosition(real_position, space.initial_automata)
 
 	for door in door_layout:
 		parse = door.split(" ")
 		if parse[0] + " " + parse[1] == str(real_position):
-			if parse[3] == 'open':
-				return True
+			if parse[2] == "door":
+				if parse[3] == 'open':
+					return True
+				elif inventory == "have":
+					# print modified_key
+					# print modified_key
+					global modified_key
+					modified_key = "don't have"
+					return True
+				else:
+					return False
 			else:
-				return False
+				if parse[3] == "enemies_dead":
+					return True
+				else:
+					return False
 
 	if (automata == None or isPassable(world, link_collider, automata)) and world_map[position[1]][position[0]] != 1:
 		return True
@@ -232,7 +257,17 @@ for grid in world._spaces:
 				automata_y = automata[2]["y"] / tile_height - 1
 				automata_states[automata[0]] = getPossibleStates(automata[0])
 
-				automata_pos = (automata_x, automata_y)
+				if automata[0] == "enemy_tracker":
+					for instance in world.automata:
+						if instance.name == "enemy_tracker":
+							for collider in instance.colliders:
+								if collider.is_static:
+									x_offset = collider.shape.x.value / 32
+									y_offset = collider.shape.y.value / 32
+					automata_pos = (int(automata_x + x_offset), int(automata_y + y_offset))
+					# print "Eureka!"
+				else:
+					automata_pos = (automata_x, automata_y)
 
 				local_data = {}
 				local_data["type"] = automata[0]
@@ -278,19 +313,37 @@ for grid in world._spaces:
 	for path in exit:
 		exit_list.append((path[0], height - path[1] - 1))
 	print exit_list
+	print
 
+	# print local_automata
 
+	key_state = ["have", "don't have"]
+	modified_key = ""
+
+	# fully implemented
+	# current configuration takes for all possible automata, what paths are possible
+	# can also implement possible with and without key as a global variable
+	# currently loses key when the character explores the path that contains the door
 	live_combos = stateCombinations(local_automata)
 	if live_combos:
-		for layout in live_combos:
-			door_layout = layout
-			print "current configuration:"
-			print layout
-			showPaths()
+		for posession in key_state:
+			if posession == "have":
+				inventory = posession
+				for layout in live_combos:
+					door_layout = layout
+					print "current configuration:"
+					print layout
+					showPaths()
 	else:
-		door_layout = []
-		print "empty configuration"
-		showPaths()
+		for posession in key_state:
+			inventory = posession
+			door_layout = []
+			print "empty configuration"
+			showPaths()
+
+	# next approach should read in automata and determine what needs to happen
+	# if enemy_tracker is active, kill enemies
+	# if key is there, make it gone
 
 	if grid[0] == "1":
 		break
