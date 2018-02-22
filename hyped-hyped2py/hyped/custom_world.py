@@ -1,6 +1,16 @@
 import hyped.interpreter as itp
 from heapq import heappop, heappush
 
+def stateCombinations(dungeon_automata):
+
+	if not dungeon_automata:
+		print "empty list"
+		return " "
+	
+	keys = dungeon_automata.keys()
+
+	print keys
+
 def addAdj(x, y, door_status):
 	adj_list = []
 	if x - 1 >= 0 and positionIsPassable((x - 1, y), door_status):
@@ -175,6 +185,7 @@ for grid in world._spaces:
 	print ""
 
 	automata_states = {}
+	local_automata = {}
 
 	# store all automata states
 	if space.initial_automata:
@@ -183,6 +194,14 @@ for grid in world._spaces:
 				automata_x = automata[2]["x"] / tile_width
 				automata_y = automata[2]["y"] / tile_height - 1
 				automata_states[automata[0]] = getPossibleStates(automata[0])
+
+				automata_pos = (automata_x, automata_y)
+
+				local_data = {}
+				local_data["type"] = automata[0]
+				local_data["states"] = getPossibleStates(automata[0])
+
+				local_automata[automata_pos] = local_data
 			elif automata[0] == "link":
 				automata_x = automata[2]["x"] / tile_width
 				automata_y = automata[2]["y"] / tile_height
@@ -191,17 +210,23 @@ for grid in world._spaces:
 		print "initital state: n/a"
 		print
 
+	# print "before:", local_automata
+	stateCombinations(local_automata)
+	# print "after:", local_automata
+
+	stateCombinations([])
+
 	# if a door exists, print a path with the door open and closed
 	if "door" in automata_states:
 		for init_state in automata_states["door"]:
 			for final_state in automata_states["door"]:
 				if final_state == "open":
 					print "open door:", init_state + "-" + final_state
-					showPaths("open")
+					# showPaths("open")
 					print
 				elif init_state == "closed":
 					print "closed door:", init_state + "-" + final_state
-					showPaths("closed")
+					# showPaths("closed")
 					print
 	else:
 		print "I don't exist"
