@@ -3,13 +3,31 @@ from heapq import heappop, heappush
 
 def stateCombinations(dungeon_automata):
 
-	if not dungeon_automata:
-		print "empty list"
-		return " "
-	
-	keys = dungeon_automata.keys()
+	print dungeon_automata
 
-	print keys
+	combo = []
+
+	if not dungeon_automata:
+		pass
+	else:
+
+		keys = dungeon_automata.keys()
+		pos = keys[0]
+		automata_type = dungeon_automata[pos]["type"]
+
+		sub_dict = dict(dungeon_automata)
+		del sub_dict[keys[0]]
+		sub_combo = stateCombinations(sub_dict, depth + 1)
+		for state in dungeon_automata[pos]["states"]:
+			next_entry = str(pos) + " " + automata_type + " " + state
+			if sub_combo:
+				for combination in sub_combo:
+					combo_pointer = list(combination)
+					combo_pointer.append(next_entry)
+					combo.append(combo_pointer)
+			else:
+				combo.append([next_entry])
+	return combo
 
 def addAdj(x, y, door_status):
 	adj_list = []
@@ -210,11 +228,30 @@ for grid in world._spaces:
 		print "initital state: n/a"
 		print
 
-	# print "before:", local_automata
-	stateCombinations(local_automata)
-	# print "after:", local_automata
+	test_data = {
+		(0, 0): {
+			"type": "enemy",
+			"states": [
+				"alive",
+				"dead"
+			]
+		},
+		(1, 1): {
+			"type": "door",
+			"states": [
+				"open",
+				"closed"
+			]
+		}
+	}
 
-	stateCombinations([])
+	live_combos = stateCombinations(local_automata)
+	# for layout in live_combos:
+	# 	print layout
+
+	for x in range(0, len(live_combos)):
+		print str(x + 1) + ".", live_combos[x]
+
 
 	# if a door exists, print a path with the door open and closed
 	if "door" in automata_states:
