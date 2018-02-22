@@ -77,6 +77,12 @@ def findExitPath(initial_position, destination):
 	    current = destination
 	    path = [current]
 	    while current != initial_position:
+	    	for item in door_layout:
+		    	parse = item.split(" ")
+		    	if parse[0] + " " + parse[1] == str((current[0], height - current[1] - 1)):
+		    		if parse[2] == "door" and parse[3] == "closed":
+		    			global modified_key
+	    				modified_key = "don't have"
 	        current = parent[current]
 	        path.append(current)
 	    path.reverse()
@@ -132,8 +138,6 @@ def automataAtPosition(position, dungeon_automata):
 
 def positionIsPassable(position):
 
-	# print modified_key
-
 	real_position = (position[0], height - position[1] - 1)
 	automata = automataAtPosition(real_position, space.initial_automata)
 
@@ -144,10 +148,6 @@ def positionIsPassable(position):
 				if parse[3] == 'open':
 					return True
 				elif inventory == "have":
-					# print modified_key
-					# print modified_key
-					global modified_key
-					modified_key = "don't have"
 					return True
 				else:
 					return False
@@ -171,7 +171,6 @@ def isPassable(world, link_collider, automata_name):
 			return True
 
 def showPaths():
-	# print status
 	if len(exit) == 1:
 		print "*************************"
 		findAllExit(exit[0], exit)
@@ -265,7 +264,6 @@ for grid in world._spaces:
 									x_offset = collider.shape.x.value / 32
 									y_offset = collider.shape.y.value / 32
 					automata_pos = (int(automata_x + x_offset), int(automata_y + y_offset))
-					# print "Eureka!"
 				else:
 					automata_pos = (automata_x, automata_y)
 
