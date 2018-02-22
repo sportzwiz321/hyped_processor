@@ -3,8 +3,6 @@ from heapq import heappop, heappush
 
 def stateCombinations(dungeon_automata):
 
-	# print dungeon_automata
-
 	combo = []
 
 	if not dungeon_automata:
@@ -14,7 +12,6 @@ def stateCombinations(dungeon_automata):
 		keys = dungeon_automata.keys()
 		count = 0
 		rem_list = []
-		# pos = keys[count]
 		while count < len(keys) and dungeon_automata[keys[count]]["type"] != "door":
 			rem_list.append(keys[count])
 			count += 1
@@ -126,23 +123,15 @@ def automataAtPosition(position, dungeon_automata):
 def positionIsPassable(position):
 	real_position = (position[0], height - position[1] - 1)
 	automata = automataAtPosition(real_position, space.initial_automata)
-	# print door_layout
 
 	for door in door_layout:
 		parse = door.split(" ")
 		if parse[0] + " " + parse[1] == str(real_position):
-			# print "success"
-			# print parse
 			if parse[3] == 'open':
 				return True
 			else:
 				return False
 
-	# print "real_position:", real_position
-	# print "position:", position
-
-	# if automata == "door" and door_status == "open":
-	# 	return True
 	if (automata == None or isPassable(world, link_collider, automata)) and world_map[position[1]][position[0]] != 1:
 		return True
 	else:
@@ -169,6 +158,7 @@ def showPaths():
 			temp_copy.remove(portal)
 			findAllExit(portal, temp_copy)
 			print "*************************"
+	print
 
 # map_index = 2
 
@@ -257,48 +247,50 @@ for grid in world._spaces:
 		print "initital state: n/a"
 		print
 
-	test_data = {
-		(0, 0): {
-			"type": "enemy",
-			"states": [
-				"alive",
-				"dead"
-			]
-		},
-		(1, 1): {
-			"type": "door",
-			"states": [
-				"open",
-				"closed"
-			]
-		}
-	}
+	# example case for showing different paths for various combinations of open and closed doors
+	# 
+	# test_data = {
+	# 	(4, 5): {
+	# 		"type": "door",
+	# 		"states": [
+	# 			"open",
+	# 			"closed"
+	# 		]
+	# 	},
+	# 	(4, 1): {
+	# 		"type": "door",
+	# 		"states": [
+	# 			"open",
+	# 			"closed"
+	# 		]
+	# 	}
+	# }
+	# 
+	# test_combos = stateCombinations(test_data)
+	# for layout in test_combos:
+	# 	# local global door_layout
+	# 	door_layout = layout
+	# 	print layout
+	# 	showPaths()
+
+	print "exits:"
+	exit_list = []
+	for path in exit:
+		exit_list.append((path[0], height - path[1] - 1))
+	print exit_list
+
 
 	live_combos = stateCombinations(local_automata)
-	for layout in live_combos:
-		door_layout = layout
-		print layout
+	if live_combos:
+		for layout in live_combos:
+			door_layout = layout
+			print "current configuration:"
+			print layout
+			showPaths()
+	else:
+		door_layout = []
+		print "empty configuration"
 		showPaths()
-
-	# for x in range(0, len(live_combos)):
-	# 	print str(x + 1) + ".", live_combos[x]
-
-
-	# if a door exists, print a path with the door open and closed
-	# if "door" in automata_states:
-	# 	for init_state in automata_states["door"]:
-	# 		for final_state in automata_states["door"]:
-	# 			if final_state == "open":
-	# 				print "open door:", init_state + "-" + final_state
-	# 				# showPaths("open")
-	# 				print
-	# 			elif init_state == "closed":
-	# 				print "closed door:", init_state + "-" + final_state
-	# 				# showPaths("closed")
-	# 				print
-	# else:
-	# 	print "I don't exist"
-	# print
 
 	if grid[0] == "1":
 		break
