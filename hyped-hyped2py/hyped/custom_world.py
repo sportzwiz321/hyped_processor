@@ -43,19 +43,19 @@ def stateCombinations(dungeon_automata):
 					combo.append([next_entry])
 	return combo
 
-def addAdj(x, y, door_status):
+def addAdj(x, y):
 	adj_list = []
-	if x - 1 >= 0 and positionIsPassable((x - 1, y), door_status):
+	if x - 1 >= 0 and positionIsPassable((x - 1, y)):
 		adj_list.append((x - 1, y))
-	if y - 1 >= 0 and positionIsPassable((x, y - 1), door_status):
+	if y - 1 >= 0 and positionIsPassable((x, y - 1)):
 		adj_list.append((x, y - 1))
-	if x + 1 < width and positionIsPassable((x + 1, y), door_status):
+	if x + 1 < width and positionIsPassable((x + 1, y)):
 		adj_list.append((x + 1, y))
-	if y + 1 < height and positionIsPassable((x, y + 1), door_status):
+	if y + 1 < height and positionIsPassable((x, y + 1)):
 		adj_list.append((x, y + 1))
 	return adj_list
 
-def findExitPath(initial_position, destination, door_status):
+def findExitPath(initial_position, destination):
 	q = []
 	heappush(q, (0, initial_position))
 	parent = {}
@@ -68,7 +68,7 @@ def findExitPath(initial_position, destination, door_status):
 	    if current == destination:
 	        break
 
-	    for next in addAdj(current[1][0], current[1][1], door_status):
+	    for next in addAdj(current[1][0], current[1][1]):
 	        new_cost = cost[current[1]] + 1
 	        if next not in cost or new_cost < cost[next]:
 	            cost[next] = new_cost
@@ -88,9 +88,9 @@ def findExitPath(initial_position, destination, door_status):
 
 	return path
 
-def findAllExit(initial_position, exit, door_status):
+def findAllExit(initial_position, exit):
 	for goal in exit:
-		path = findExitPath(initial_position, goal, door_status)
+		path = findExitPath(initial_position, goal)
 		print "initial_position: (" + str(initial_position[0]) + ",", str(height - initial_position[1] - 1) + ")"
 		print "goal: (" + str(goal[0]) + ",", str(height - goal[1] - 1) + ")"
 		print ""
@@ -123,11 +123,26 @@ def automataAtPosition(position, dungeon_automata):
 				return automata[0]
 	return None
 
-def positionIsPassable(position, door_status):
+def positionIsPassable(position):
 	real_position = (position[0], height - position[1] - 1)
 	automata = automataAtPosition(real_position, space.initial_automata)
-	if automata == "door" and door_status == "open":
-		return True
+	# print door_layout
+
+	for door in door_layout:
+		parse = door.split(" ")
+		if parse[0] + " " + parse[1] == str(real_position):
+			# print "success"
+			# print parse
+			if parse[3] == 'open':
+				return True
+			else:
+				return False
+
+	# print "real_position:", real_position
+	# print "position:", position
+
+	# if automata == "door" and door_status == "open":
+	# 	return True
 	if (automata == None or isPassable(world, link_collider, automata)) and world_map[position[1]][position[0]] != 1:
 		return True
 	else:
@@ -141,18 +156,18 @@ def isPassable(world, link_collider, automata_name):
 					return False
 			return True
 
-def showPaths(status):
-	print status
+def showPaths():
+	# print status
 	if len(exit) == 1:
 		print "*************************"
-		findAllExit(exit[0], exit, status)
+		findAllExit(exit[0], exit)
 		print "*************************"
 	else:
 		for portal in exit:
 			print "*************************"
 			temp_copy = list(exit)
 			temp_copy.remove(portal)
-			findAllExit(portal, temp_copy, status)
+			findAllExit(portal, temp_copy)
 			print "*************************"
 
 # map_index = 2
@@ -259,32 +274,31 @@ for grid in world._spaces:
 		}
 	}
 
-	# print "local_automata:", local_automata
-	# for spot in local_automata:
-	# 	print "local_automata:", local_automata[spot]
 	live_combos = stateCombinations(local_automata)
-	# for layout in live_combos:
-	# 	print layout
+	for layout in live_combos:
+		door_layout = layout
+		print layout
+		showPaths()
 
-	for x in range(0, len(live_combos)):
-		print str(x + 1) + ".", live_combos[x]
+	# for x in range(0, len(live_combos)):
+	# 	print str(x + 1) + ".", live_combos[x]
 
 
 	# if a door exists, print a path with the door open and closed
-	if "door" in automata_states:
-		for init_state in automata_states["door"]:
-			for final_state in automata_states["door"]:
-				if final_state == "open":
-					print "open door:", init_state + "-" + final_state
-					# showPaths("open")
-					print
-				elif init_state == "closed":
-					print "closed door:", init_state + "-" + final_state
-					# showPaths("closed")
-					print
-	else:
-		print "I don't exist"
-	print
+	# if "door" in automata_states:
+	# 	for init_state in automata_states["door"]:
+	# 		for final_state in automata_states["door"]:
+	# 			if final_state == "open":
+	# 				print "open door:", init_state + "-" + final_state
+	# 				# showPaths("open")
+	# 				print
+	# 			elif init_state == "closed":
+	# 				print "closed door:", init_state + "-" + final_state
+	# 				# showPaths("closed")
+	# 				print
+	# else:
+	# 	print "I don't exist"
+	# print
 
 	if grid[0] == "1":
 		break
