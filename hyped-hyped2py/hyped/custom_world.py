@@ -3,7 +3,7 @@ from heapq import heappop, heappush
 
 def stateCombinations(dungeon_automata):
 
-	print dungeon_automata
+	# print dungeon_automata
 
 	combo = []
 
@@ -12,21 +12,35 @@ def stateCombinations(dungeon_automata):
 	else:
 
 		keys = dungeon_automata.keys()
-		pos = keys[0]
-		automata_type = dungeon_automata[pos]["type"]
+		count = 0
+		rem_list = []
+		# pos = keys[count]
+		while count < len(keys) and dungeon_automata[keys[count]]["type"] != "door":
+			rem_list.append(keys[count])
+			count += 1
 
 		sub_dict = dict(dungeon_automata)
-		del sub_dict[keys[0]]
-		sub_combo = stateCombinations(sub_dict, depth + 1)
-		for state in dungeon_automata[pos]["states"]:
-			next_entry = str(pos) + " " + automata_type + " " + state
-			if sub_combo:
-				for combination in sub_combo:
-					combo_pointer = list(combination)
-					combo_pointer.append(next_entry)
-					combo.append(combo_pointer)
-			else:
-				combo.append([next_entry])
+		for item in rem_list:
+			del sub_dict[item]
+
+		if not sub_dict:
+			pass
+		else:
+			pos = keys[count]
+			automata_type = dungeon_automata[pos]["type"]
+
+			sub_dict = dict(dungeon_automata)
+			del sub_dict[keys[count]]
+			sub_combo = stateCombinations(sub_dict)
+			for state in dungeon_automata[pos]["states"]:
+				next_entry = str(pos) + " " + automata_type + " " + state
+				if sub_combo:
+					for combination in sub_combo:
+						combo_pointer = list(combination)
+						combo_pointer.append(next_entry)
+						combo.append(combo_pointer)
+				else:
+					combo.append([next_entry])
 	return combo
 
 def addAdj(x, y, door_status):
@@ -245,6 +259,9 @@ for grid in world._spaces:
 		}
 	}
 
+	# print "local_automata:", local_automata
+	# for spot in local_automata:
+	# 	print "local_automata:", local_automata[spot]
 	live_combos = stateCombinations(local_automata)
 	# for layout in live_combos:
 	# 	print layout
