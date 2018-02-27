@@ -1,7 +1,13 @@
 import hyped.interpreter as itp
 from heapq import heappop, heappush
 
-def stateCombinations(dungeon_automata):
+def isInvalidAutomata(atype, isDynamic):
+	if atype == "door" or atype == "enemy_tracker":
+		return isDynamic
+	else:
+		return not isDynamic
+
+def stateCombinations(dungeon_automata, isDynamic):
 
 	combo = []
 
@@ -12,7 +18,7 @@ def stateCombinations(dungeon_automata):
 		keys = dungeon_automata.keys()
 		count = 0
 		rem_list = []
-		while count < len(keys) and dungeon_automata[keys[count]]["type"] != "door" and dungeon_automata[keys[count]]["type"] != "enemy_tracker":
+		while count < len(keys) and isInvalidAutomata(dungeon_automata[keys[count]]["type"], isDynamic):
 			rem_list.append(keys[count])
 			count += 1
 
@@ -28,7 +34,7 @@ def stateCombinations(dungeon_automata):
 
 			sub_dict = dict(dungeon_automata)
 			del sub_dict[keys[count]]
-			sub_combo = stateCombinations(sub_dict)
+			sub_combo = stateCombinations(sub_dict, isDynamic)
 			for state in dungeon_automata[pos]["states"]:
 				next_entry = str(pos) + " " + automata_type + " " + state
 				if sub_combo:
@@ -322,22 +328,33 @@ for grid in world._spaces:
 	# current configuration takes for all possible automata, what paths are possible
 	# can also implement possible with and without key as a global variable
 	# currently loses key when the character explores the path that contains the door
-	live_combos = stateCombinations(local_automata)
+	live_combos = stateCombinations(local_automata, False)
 	if live_combos:
 		for posession in key_state:
-			if posession == "have":
-				inventory = posession
-				for layout in live_combos:
-					door_layout = layout
-					print "current configuration:"
-					print layout
-					showPaths()
+			# if posession == "have":
+			inventory = posession
+			for layout in live_combos:
+				door_layout = layout
+				print "current configuration:"
+				print layout
+				showPaths()
 	else:
 		for posession in key_state:
 			inventory = posession
 			door_layout = []
 			print "empty configuration"
 			showPaths()
+
+	dyn_automata = stateCombinations(local_automata, True)
+
+	print "False"
+	for item in dyn_automata:
+		print item
+
+	print
+	print "True"
+	for item in live_combos:
+		print item
 
 	# next approach should read in automata and determine what needs to happen
 	# if enemy_tracker is active, kill enemies
