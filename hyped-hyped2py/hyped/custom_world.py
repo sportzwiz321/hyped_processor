@@ -1,6 +1,33 @@
 import hyped.interpreter as itp
 from heapq import heappop, heappush
 
+def interact(automata):
+	global start
+	split = automata.split(" ")
+	if split[2] == "enemy":
+		# print split[3]
+		x = int(split[0][1:2])
+		y = 6 - int(split[1][0:1])
+		tup = (x, y)
+		if split[3] == "alive":
+			print "I will kill the enemy at", tup
+			global modified_key
+			modified_key = inventory
+			path = findExitPath(start, tup)
+			print
+			if path:
+				for x in range(0, len(path)):
+					print "(" + str(path[x][0]) + ",", str(height - path[x][1] - 1) + ")"
+					if x == len(path) - 1:
+						# print path[x]
+						start = path[x]
+			else:
+				print "N/A"
+			print
+		else:
+			print "The enemy is already dead at", tup
+	# print split
+
 def isInvalidAutomata(atype, isDynamic):
 	if atype == "door" or atype == "enemy_tracker":
 		return isDynamic
@@ -331,13 +358,13 @@ for grid in world._spaces:
 	live_combos = stateCombinations(local_automata, False)
 	if live_combos:
 		for posession in key_state:
-			# if posession == "have":
-			inventory = posession
-			for layout in live_combos:
-				door_layout = layout
-				print "current configuration:"
-				print layout
-				showPaths()
+			if posession == "have":
+				inventory = posession
+				for layout in live_combos:
+					door_layout = layout
+					print "current configuration:"
+					print layout
+					showPaths()
 	else:
 		for posession in key_state:
 			inventory = posession
@@ -347,14 +374,27 @@ for grid in world._spaces:
 
 	dyn_automata = stateCombinations(local_automata, True)
 
-	print "False"
-	for item in dyn_automata:
-		print item
+	init = (1, 1)
 
-	print
-	print "True"
-	for item in live_combos:
-		print item
+	# print "False"
+	if dyn_automata:
+		for posession in key_state:
+			if posession == "have":
+				inventory = posession
+				print inventory
+				print
+				for item in dyn_automata:
+					start = (1, 6 - init[1])
+					item_state = item
+					print "current item state"
+					for obj in item_state:
+						interact(obj)
+					print
+
+	# print
+	# print "True"
+	# for item in live_combos:
+	# 	print item
 
 	# next approach should read in automata and determine what needs to happen
 	# if enemy_tracker is active, kill enemies
