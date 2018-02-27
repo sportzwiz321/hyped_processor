@@ -1,8 +1,23 @@
 import hyped.interpreter as itp
 from heapq import heappop, heappush
 
-def interact(automata):
+def travel(destination):
 	global start
+	global modified_key
+	modified_key = inventory
+	path = findExitPath(start, destination)
+	print
+	if path:
+		for x in range(0, len(path)):
+			print "(" + str(path[x][0]) + ",", str(height - path[x][1] - 1) + ")"
+			if x == len(path) - 1:
+				# print path[x]
+				start = path[x]
+	else:
+		print "N/A"
+
+
+def interact(automata):
 	split = automata.split(" ")
 	if split[2] == "enemy":
 		# print split[3]
@@ -11,21 +26,19 @@ def interact(automata):
 		tup = (x, y)
 		if split[3] == "alive":
 			print "I will kill the enemy at", tup
-			global modified_key
-			modified_key = inventory
-			path = findExitPath(start, tup)
-			print
-			if path:
-				for x in range(0, len(path)):
-					print "(" + str(path[x][0]) + ",", str(height - path[x][1] - 1) + ")"
-					if x == len(path) - 1:
-						# print path[x]
-						start = path[x]
-			else:
-				print "N/A"
+			travel(tup)
 			print
 		else:
 			print "The enemy is already dead at", tup
+	elif split[2] == "key":
+		x = int(split[0][1:2])
+		y = 6 - int(split[1][0:1])
+		tup = (x, y)
+		if split[3] == "there":
+			print "I will go there"
+			travel(tup)
+			print
+		print split
 	# print split
 
 def isInvalidAutomata(atype, isDynamic):
@@ -376,7 +389,7 @@ for grid in world._spaces:
 
 	init = (1, 1)
 
-	# print "False"
+	# for each dynamic automata in the room explore it
 	if dyn_automata:
 		for posession in key_state:
 			if posession == "have":
@@ -391,17 +404,22 @@ for grid in world._spaces:
 						interact(obj)
 					print
 
-	# print
-	# print "True"
-	# for item in live_combos:
-	# 	print item
-
 	# next approach should read in automata and determine what needs to happen
 	# if enemy_tracker is active, kill enemies
 	# if key is there, make it gone
 
-	if grid[0] == "1":
-		break
+	# high level goal
+
+	# for each entrance in the room
+	# for each door state
+	# for each automata state
+	# interact with all of the automata
+	# attempt to go to each exit
+
+	# need logic for interacting with doors and enemy trackers based on inventory and automata in the room
+
+	# if grid[0] == "1":
+	# 	break
 '''
 	# prints and finds all exits for a given dungeon
 	if space.initial_automata and space.initial_automata[0][0] == "link":
