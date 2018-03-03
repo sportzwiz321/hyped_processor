@@ -18,6 +18,7 @@ def travel(destination):
 
 
 def interact(automata):
+	global final_item
 	split = automata.split(" ")
 	if split[2] == "enemy":
 		# print split[3]
@@ -30,6 +31,7 @@ def interact(automata):
 			print
 		else:
 			print "The enemy is already dead at", tup
+		final_item.append(split[0] + " " + split[1] + " " + split[2] + " dead")
 	elif split[2] == "key":
 		x = int(split[0][1:2])
 		y = 6 - int(split[1][0:1])
@@ -38,6 +40,7 @@ def interact(automata):
 			print "I will go there"
 			travel(tup)
 			print
+		final_item.append(split[0] + " " + split[1] + " " + split[2] + " gone")
 		print split
 	# print split
 
@@ -186,6 +189,7 @@ def automataAtPosition(position, dungeon_automata):
 
 def positionIsPassable(position):
 
+	global final_item
 	real_position = (position[0], height - position[1] - 1)
 	automata = automataAtPosition(real_position, space.initial_automata)
 
@@ -200,10 +204,18 @@ def positionIsPassable(position):
 				else:
 					return False
 			else:
-				if parse[3] == "enemies_dead":
-					return True
-				else:
-					return False
+				all_dead = True
+				count = 0
+				while all_dead and count < len(final_item):
+					split = final_item[count].split(" ")
+					if split[2] == "enemy":
+						all_dead = split[3] == "dead"
+					count += 1
+				return all_dead
+				# if parse[3] == "enemies_dead":
+				# 	return True
+				# else:
+				# 	return False
 
 	if (automata == None or isPassable(world, link_collider, automata)) and world_map[position[1]][position[0]] != 1:
 		return True
@@ -416,7 +428,7 @@ for grid in world._spaces:
 	# high level goal
 
 	for door in exit:
-		print door
+		print "door:", door
 		if live_combos:
 			for layout in live_combos:
 				if dyn_automata:
@@ -426,12 +438,15 @@ for grid in world._spaces:
 							start = tuple(door)
 							door_layout = layout
 							local_inventory = posession
+							final_item = []
 							print start
 							print door_layout
 							print item_state
 							print local_inventory
 							for item in item_state:
 								interact(item)
+							print final_item
+							findAllExit(start, exit)
 							print "exit", exit
 							print "exit_list", exit_list
 							print
