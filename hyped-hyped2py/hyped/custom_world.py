@@ -4,14 +4,13 @@ from heapq import heappop, heappush
 def travel(destination):
 	global start
 	global modified_key
-	modified_key = inventory
+	modified_key = local_inventory
 	path = findExitPath(start, destination)
 	print
 	if path:
 		for x in range(0, len(path)):
 			print "(" + str(path[x][0]) + ",", str(height - path[x][1] - 1) + ")"
 			if x == len(path) - 1:
-				# print path[x]
 				start = path[x]
 	else:
 		print "N/A"
@@ -21,7 +20,6 @@ def interact(automata):
 	global final_item
 	split = automata.split(" ")
 	if split[2] == "enemy":
-		# print split[3]
 		x = int(split[0][1:2])
 		y = 6 - int(split[1][0:1])
 		tup = (x, y)
@@ -41,8 +39,6 @@ def interact(automata):
 			travel(tup)
 			print
 		final_item.append(split[0] + " " + split[1] + " " + split[2] + " gone")
-		print split
-	# print split
 
 def isInvalidAutomata(atype, isDynamic):
 	if atype == "door" or atype == "enemy_tracker":
@@ -145,7 +141,7 @@ def findExitPath(initial_position, destination):
 def findAllExit(initial_position, exit):
 	for goal in exit:
 		global modified_key
-		modified_key = inventory
+		modified_key = local_inventory
 		print "initial_position: (" + str(initial_position[0]) + ",", str(height - initial_position[1] - 1) + ")"
 		print "initial key possession:", modified_key
 		path = findExitPath(initial_position, goal)
@@ -159,9 +155,6 @@ def findAllExit(initial_position, exit):
 			print "N/A"
 		print
 
-# to grab the x and y offset of the enemy tracker
-# for automata.name == enemy_tracker and automata.collider.is_static == true
-# automata.collider.shape.x.value
 def getPossibleStates(automata_name):
 	all_states = []
 	for entry in world.automata:
@@ -199,7 +192,7 @@ def positionIsPassable(position):
 			if parse[2] == "door":
 				if parse[3] == 'open':
 					return True
-				elif inventory == "have":
+				elif local_inventory == "have":
 					return True
 				else:
 					return False
@@ -212,10 +205,6 @@ def positionIsPassable(position):
 						all_dead = split[3] == "dead"
 					count += 1
 				return all_dead
-				# if parse[3] == "enemies_dead":
-				# 	return True
-				# else:
-				# 	return False
 
 	if (automata == None or isPassable(world, link_collider, automata)) and world_map[position[1]][position[0]] != 1:
 		return True
@@ -243,8 +232,6 @@ def showPaths():
 			findAllExit(portal, temp_copy)
 			print "*************************"
 	print
-
-# map_index = 2
 
 # initialize global data
 
@@ -340,95 +327,23 @@ for grid in world._spaces:
 		print "initital state: n/a"
 		print
 
-	# example case for showing different paths for various combinations of open and closed doors
-	# 
-	# test_data = {
-	# 	(4, 5): {
-	# 		"type": "door",
-	# 		"states": [
-	# 			"open",
-	# 			"closed"
-	# 		]
-	# 	},
-	# 	(4, 1): {
-	# 		"type": "door",
-	# 		"states": [
-	# 			"open",
-	# 			"closed"
-	# 		]
-	# 	}
-	# }
-	# 
-	# test_combos = stateCombinations(test_data)
-	# for layout in test_combos:
-	# 	# local global door_layout
-	# 	door_layout = layout
-	# 	print layout
-	# 	showPaths()
-
-	print "exits:"
-	exit_list = []
-	for path in exit:
-		exit_list.append((path[0], height - path[1] - 1))
-	print exit_list
-	print
-
-	# print local_automata
-
 	key_state = ["have", "don't have"]
 	modified_key = ""
+	local_inventory = ""
 
-	# fully implemented
-	# current configuration takes for all possible automata, what paths are possible
-	# can also implement possible with and without key as a global variable
-	# currently loses key when the character explores the path that contains the door
 	live_combos = stateCombinations(local_automata, False)
-	# if live_combos:
-	# 	for posession in key_state:
-	# 		if posession == "have":
-	# 			inventory = posession
-	# 			for layout in live_combos:
-	# 				door_layout = layout
-	# 				print "current configuration:"
-	# 				print layout
-	# 				showPaths()
-	# else:
-	# 	for posession in key_state:
-	# 		inventory = posession
-	# 		door_layout = []
-	# 		print "empty configuration"
-	# 		showPaths()
 
 	dyn_automata = stateCombinations(local_automata, True)
 
-	# init = (1, 1)
-
-	# # for each dynamic automata in the room explore it
-	# if dyn_automata:
-	# 	for posession in key_state:
-	# 		if posession == "have":
-	# 			inventory = posession
-	# 			print inventory
-	# 			print
-	# 			for item in dyn_automata:
-	# 				start = (1, 6 - init[1])
-	# 				item_state = item
-	# 				print "current item state"
-	# 				for obj in item_state:
-	# 					interact(obj)
-	# 				print
-
-	inventory = "have"
-	# door_layout = []
-
-	# next approach should read in automata and determine what needs to happen
-	# if enemy_tracker is active, kill enemies
-	# if key is there, make it gone
-
-	# high level goal
+	# for each entrance in the room
+	# for each door state
+	# for each automata state
+	# for each inventory state
+	# interact with all of the automata
+	# attempt to go to each exit
 
 	for door in exit:
-		print "door:", door
+		# print "door:", door
 		if live_combos:
 			for layout in live_combos:
 				if dyn_automata:
@@ -443,46 +358,70 @@ for grid in world._spaces:
 							print door_layout
 							print item_state
 							print local_inventory
+
+							# updates final_item states 
 							for item in item_state:
 								interact(item)
 							print final_item
+
+							# checks final_item and local_inventory to go through door and enemy_tracker 
 							findAllExit(start, exit)
-							print "exit", exit
-							print "exit_list", exit_list
 							print
-							break
-						break
-					break
+				else:
+					for posession in key_state:
 
-	# for each entrance in the room
-	# for each door state
-	# for each automata state
-	# for each inventory state
-	# interact with all of the automata
-	# attempt to go to each exit
+						local_inventory = posession
+						door_layout = layout
 
-	# need logic for interacting with doors and enemy trackers based on inventory and automata in the room
+						print "***new entry***" 
 
-	if grid[0] == "1":
-		break
-'''
-	# prints and finds all exits for a given dungeon
-	if space.initial_automata and space.initial_automata[0][0] == "link":
-		initial_location = space.initial_automata[0][2]
-		initial_x = initial_location["x"] / tile_width
-		initial_y = initial_location["y"] / tile_height
-		initial_position = (initial_x, height - initial_y - 1)
-		findAllExit(initial_position, exit, adj)
-	else:
-		if len(exit) == 1:
-			print "*************************"
-			findAllExit(exit[0], exit, adj)
-			print "*************************"
+						print "start:", door
+						print "door_config:", door_layout
+						print "initial_automata:", []
+						print "initial_key_status", local_inventory
+						print
+
+						
+						findAllExit(door, exit)
 		else:
-			for portal in exit:
-				print "*************************"
-				temp_copy = list(exit)
-				temp_copy.remove(portal)
-				findAllExit(portal, temp_copy, adj)
-				print "*************************"
-'''
+			if dyn_automata:
+				for item_state in dyn_automata:
+					for posession in key_state:
+
+						print "***new entry***"
+
+						start = tuple(door)
+						door_layout = []
+						local_inventory = posession
+						final_item = []
+
+						print "start:", start
+						print "door_config:", door_layout
+						print "initial_automata:", item_state
+						print "initial_key_status", local_inventory
+						print
+
+						for item in item_state:
+							interact(item)
+
+						print "final_automata:", final_item
+
+						print
+
+						findAllExit(start, exit)
+						print
+			else:
+
+				for posession in key_state:
+
+					door_layout = []
+					local_inventory = posession
+
+					print "***new entry***" 
+
+					print "start:", door
+					print "door_config:", door_layout
+					print "initial_automata:", []
+					print "initial_key_status", local_inventory
+					print
+					findAllExit(door, exit)
