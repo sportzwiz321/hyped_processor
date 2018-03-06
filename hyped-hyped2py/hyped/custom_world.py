@@ -1,4 +1,4 @@
-import hyped.interpreter as itp
+import interpreter as itp
 from heapq import heappop, heappush
 
 def travel(destination):
@@ -6,7 +6,6 @@ def travel(destination):
 	global modified_key
 	modified_key = local_inventory
 	path = findExitPath(start, destination)
-	print
 	if path:
 		for x in range(0, len(path)):
 			print "(" + str(path[x][0]) + ",", str(height - path[x][1] - 1) + ")"
@@ -21,23 +20,28 @@ def interact(automata):
 	split = automata.split(" ")
 	if split[2] == "enemy":
 		x = int(split[0][1:2])
-		y = 6 - int(split[1][0:1])
+		y = height - int(split[1][0:1]) - 1
 		tup = (x, y)
 		if split[3] == "alive":
 			print "I will kill the enemy at", tup
 			travel(tup)
 			print
 		else:
-			print "The enemy is already dead at", tup
+			print "No action neccessary"
+			# print "The enemy is already dead at", tup
 		final_item.append(split[0] + " " + split[1] + " " + split[2] + " dead")
 	elif split[2] == "key":
 		x = int(split[0][1:2])
-		y = 6 - int(split[1][0:1])
+		y = height - int(split[1][0:1]) - 1
 		tup = (x, y)
 		if split[3] == "there":
-			print "I will go there"
+			print "I will go there to", automata
 			travel(tup)
+			global local_inventory
+			local_inventory = "have"
 			print
+		else:
+			print "No action neccessary"
 		final_item.append(split[0] + " " + split[1] + " " + split[2] + " gone")
 
 def isInvalidAutomata(atype, isDynamic):
@@ -245,7 +249,8 @@ def showPaths():
 # world
 # link_collider
 # link
-world = itp.load_zelda()
+
+world = itp.custom_world()
 
 for item in world.automata:
 	if item.name == "link":
@@ -284,7 +289,7 @@ for grid in world._spaces:
 		wall = ""
 		for x in range(0, width):
 			if world_map[y][x] != 1:
-				if world_map[y][x] == 2:
+				if world_map[y][x] == 2 or world_map[y][x] == 3:
 					exit.append((x, y))
 
 			wall = wall + str(world_map[y][x]) + " "
@@ -294,6 +299,7 @@ for grid in world._spaces:
 
 	automata_states = {}
 	local_automata = {}
+	link_start = ""
 
 	# store all automata states
 	if space.initial_automata:
@@ -322,6 +328,7 @@ for grid in world._spaces:
 			elif automata[0] == "link":
 				automata_x = automata[2]["x"] / tile_width
 				automata_y = automata[2]["y"] / tile_height
+				link_start = (automata_x, height - automata_y - 1)
 	else:
 		print "automata: none"
 		print "initital state: n/a"
@@ -350,19 +357,25 @@ for grid in world._spaces:
 					for item_state in dyn_automata:
 						for posession in key_state:
 							print "***new entry***"
-							start = tuple(door)
+							if not link_start:
+								start = tuple(door)
+							else:
+								start = tuple(link_start)
 							door_layout = layout
 							local_inventory = posession
 							final_item = []
-							print start
-							print door_layout
-							print item_state
-							print local_inventory
+							print "start:", start
+							print "door_config:", door_layout
+							print "initial_automata:", item_state
+							print "initial_key_status:", local_inventory
+
+							print
 
 							# updates final_item states 
 							for item in item_state:
 								interact(item)
-							print final_item
+								print
+							print "final_automata:", final_item
 
 							# checks final_item and local_inventory to go through door and enemy_tracker 
 							findAllExit(start, exit)
@@ -375,14 +388,19 @@ for grid in world._spaces:
 
 						print "***new entry***" 
 
-						print "start:", door
+						if not link_start:
+							start = tuple(door)
+						else:
+							start = tuple(link_start)
+
+						print "start:", start
 						print "door_config:", door_layout
 						print "initial_automata:", []
 						print "initial_key_status", local_inventory
 						print
 
 						
-						findAllExit(door, exit)
+						findAllExit(start, exit)
 		else:
 			if dyn_automata:
 				for item_state in dyn_automata:
@@ -390,7 +408,10 @@ for grid in world._spaces:
 
 						print "***new entry***"
 
-						start = tuple(door)
+						if not link_start:
+							start = tuple(door)
+						else:
+							start = tuple(link_start)
 						door_layout = []
 						local_inventory = posession
 						final_item = []
@@ -403,6 +424,7 @@ for grid in world._spaces:
 
 						for item in item_state:
 							interact(item)
+							print
 
 						print "final_automata:", final_item
 
@@ -419,9 +441,14 @@ for grid in world._spaces:
 
 					print "***new entry***" 
 
-					print "start:", door
+					if not link_start:
+						start = tuple(door)
+					else:
+						start = tuple(link_start)
+
+					print "start:", start
 					print "door_config:", door_layout
 					print "initial_automata:", []
 					print "initial_key_status", local_inventory
 					print
-					findAllExit(door, exit)
+					findAllExit(start, exit)
